@@ -2,20 +2,43 @@
 """
 Flatten fillable PDF rubrics so form fields become static (non-editable) content.
 
-Uses pdftk (preferred, most reliable) with a pypdf fallback.
-Runs in parallel using multiple CPU cores with real-time progress reporting.
+Backends, tried in order of quality:
+    1. PyMuPDF  (pymupdf)  - bakes field appearances into page content. Best
+                            quality, no system install, cross-platform. Preferred.
+    2. pdftk    (pdftk-java) - reliable system flattener if PyMuPDF is absent.
+    3. pypdf               - last-resort fallback (strips the AcroForm and marks
+                            widgets read-only). Weaker; use only if nothing else.
+
+Runs in parallel across CPU cores with real-time progress reporting.
 
 Usage:
-    python flatten_pdfs.py <input_dir> [output_dir]
+    python flatten_pdfs.py <input_dir> [output_dir] [--backend auto|pymupdf|pdftk|pypdf]
 
 If output_dir is not specified, flattened files are saved to <input_dir>/flattened/
+
+Install the preferred backend with:  pip install pymupdf
 """
 
 import sys
+import argparse
 import subprocess
 import shutil
 from pathlib import Path
 from multiprocessing import Pool, cpu_count
+
+
+def flatten_with_pymupdf(args: tuple) -> tuple:
+    """Flatten a single PDF using PyMuPDF bake(). Designed for use with Pool."""
+    input_path, output_path = args
+    try:
+        import pymupdf
+        doc = pymupdf.open(str(input_path))
+        doc.bake()  # render widgets + annotations into static page content
+        doc.save(str(output_path), garbage=4, deflate=True)
+        doc.close()
+        return (input_path.name, True, "")
+    except Exception as e:  # noqa: BLE001
+        return (input_path.name, False, str(e))
 
 
 def flatten_with_pdftk(args: tuple) -> tuple:
@@ -61,25 +84,50 @@ def flatten_with_pypdf(args: tuple) -> tuple:
             writer.write(f)
         return (input_path.name, True, "")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return (input_path.name, False, str(e))
 
 
-def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
+def pymupdf_available() -> bool:
+    try:
+        import pymupdf  # noqa: F401
+        return True
+    except ImportError:
+        return False
 
-    input_dir = Path(sys.argv[1])
+
+def choose_backend(requested: str):
+    """Return (name, worker_fn) for the backend to use."""
+    backends = {
+        "pymupdf": ("pymupdf", flatten_with_pymupdf),
+        "pdftk": ("pdftk", flatten_with_pdftk),
+        "pypdf": ("pypdf", flatten_with_pypdf),
+    }
+    if requested != "auto":
+        return backends[requested]
+    if pymupdf_available():
+        return backends["pymupdf"]
+    if shutil.which("pdftk") is not None:
+        return backends["pdftk"]
+    return backends["pypdf"]
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Flatten fillable rubric PDFs.",
+                                 usage="%(prog)s <input_dir> [output_dir] "
+                                       "[--backend auto|pymupdf|pdftk|pypdf]")
+    ap.add_argument("input_dir")
+    ap.add_argument("output_dir", nargs="?", default=None)
+    ap.add_argument("--backend", choices=["auto", "pymupdf", "pdftk", "pypdf"],
+                    default="auto")
+    args = ap.parse_args()
+
+    input_dir = Path(args.input_dir)
     if not input_dir.is_dir():
         print(f"Error: '{input_dir}' is not a directory.")
         sys.exit(1)
 
-    if len(sys.argv) >= 3:
-        output_dir = Path(sys.argv[2])
-    else:
-        output_dir = input_dir / "flattened"
-
+    output_dir = Path(args.output_dir) if args.output_dir else input_dir / "flattened"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     pdf_files = sorted(input_dir.glob("*.pdf"))
@@ -88,21 +136,16 @@ def main():
         sys.exit(1)
 
     total = len(pdf_files)
-    has_pdftk = shutil.which("pdftk") is not None
-    backend = "pdftk" if has_pdftk else "pypdf"
+    backend, flatten_fn = choose_backend(args.backend)
     workers = min(cpu_count(), total, 20)
-    flatten_fn = flatten_with_pdftk if has_pdftk else flatten_with_pypdf
 
     print(f"Backend:  {backend}")
     print(f"Workers:  {workers}")
     print(f"Files:    {total}")
     print(f"Output -> '{output_dir}'\n")
 
-    task_args = [(pdf_path, output_dir / pdf_path.name) for pdf_path in pdf_files]
-
-    success = 0
-    failed = 0
-
+    task_args = [(p, output_dir / p.name) for p in pdf_files]
+    success = failed = 0
     with Pool(workers) as pool:
         for name, ok, err in pool.imap_unordered(flatten_fn, task_args):
             if ok:
@@ -113,6 +156,8 @@ def main():
                 print(f"  [{success + failed}/{total}] {name} ... FAILED ({err})")
 
     print(f"\nDone: {success} flattened, {failed} failed.")
+    if failed and backend != "pypdf":
+        print("Tip: re-run with --backend pypdf if a backend is unavailable.")
 
 
 if __name__ == "__main__":

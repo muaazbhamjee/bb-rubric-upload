@@ -1,32 +1,46 @@
-// ─── Configuration ────────────────────────────────────────────────────────
+// =============================================================================
+// Rubric emailer (Google Apps Script) - emails per-student rubric PDFs via Gmail.
+//
+// Runs in the browser at script.google.com using your UP Google Workspace account.
+// It reads feedback_u<number>.pdf files from a Drive folder and emails each to
+// u<number>@tuks.co.za. One generalised script serves every course: edit the
+// CONFIG block below. A ready-to-paste MKM411 preset is kept at the bottom.
+//
+// Run order:  dryRun  ->  createVerificationSheet  ->  sendRubrics (test)  ->  sendRubrics (live)
+// =============================================================================
+
+// ─── CONFIG (edit per course) ──────────────────────────────────────────────
 const FOLDER_ID = "PASTE_YOUR_FOLDER_ID_HERE";
 const STUDENT_EMAIL_DOMAIN = "tuks.co.za";
-const SENDER_NAME = "Prof M. Bhamjee";
-const EMAIL_SUBJECT = "MKM411 Semester Test 2 — Marking Rubric";
+const SENDER_NAME = "Prof Muaaz Bhamjee";
+const VERIFICATION_SHEET_NAME = "MIA320_GA7_Email_Verification";
+
+const EMAIL_SUBJECT = "MIA 320 GA7 Individual Project - Marking Rubric";
 const EMAIL_BODY =
   "Dear Student,\n\n" +
-  "Please find attached your marking rubric for MKM411 Semester Test 2.\n\n" +
-  "If you have any queries regarding your marks, please contact me during consultation hours.\n\n" +
-  "Please take note of the below critical information regarding the marking rubric versus the mark and GA5 Competency Assessment on clickUP:\n" +
-  "1. The marks were adjusted up by 8%. The rubric reflects the mark pre-adjustment. The mark on clickUP reflects the adjusted mark.\n" +
-  "2. In terms of assessing GA5 Competency, the rubric provides the original assessment criteria. If you met those criteria which is 4 or greater then you have passed the GA5 component.\n" +
-  "3. We removed the GA5-4 and GA5-7 criteria from the rubric. Thus, the revised criteria requires you to obtain 3 or greater then you have passed the GA5 component.\n\" +
-  "4. The rubric reflects the original GA5 assessment criteria. The ST2 GA5 column in clickUP reflects the adjusted criteria.\n" +
-  "5. On clickUP, the GA5 Competency Assessment is listed as 'ST2 GA5' and is separate from the mark. The mark reflects your overall mark for the test, while the 'ST2 GA5' column indicates whether you passed the GA5 competency based on the adjusted criteria.\n\n" +
-  "6. On clickUP for the ST2 GA5 column, a mark of 1/1 means you are deemed 'Competent' and that means you passed the GA5 component based on the adjusted criteria, while a mark of 0/1 means you are deemed 'Not Yet Competent' which means you did not meet the adjusted criteria for passing the GA5 component.\n\n" +
-  "Please review your rubric and the information above carefully. 
+  "Please find attached your marking rubric for the GA7 individual project in MIA 320 " +
+  "(Impact of Engineering Activity and Groupwork).\n\n" +
+  "Please note the following about how the rubric relates to your result:\n" +
+  "1. Part A is the numeric mark out of 50. Part B is the GA7 competency decision, " +
+  "which is judged independently of the mark.\n" +
+  "2. To pass GA7 you must achieve at least 50% in Part A and be declared Competent in Part B.\n" +
+  "3. A report may score 50% or more and still be Not Yet Competent, or score below 50% and " +
+  "be Competent. The mark and the competency decision are therefore reported separately.\n" +
+  "4. On ClickUP, your overall mark and your GA7 competency outcome are recorded in separate columns.\n\n" +
+  "Please review your rubric carefully. If you have any queries regarding your marks, please " +
+  "contact me during consultation hours.\n\n" +
   "Kind regards,\n" +
-  "Prof M. Bhamjee\n" +
+  "Prof Muaaz Bhamjee\n" +
   "Department of Mechanical and Aeronautical Engineering\n" +
   "University of Pretoria";
 
-// Set to true for first run — sends only to yourself
+// Set to true for the first live run - sends only to yourself.
 const TEST_MODE = true;
 const TEST_EMAIL = "muaaz.bhamjee@up.ac.za";
-// ──────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 
 /**
- * DRY RUN — logs what would be sent without sending anything.
+ * DRY RUN - logs what would be sent without sending anything.
  * Run this first to verify the matching is correct.
  */
 function dryRun() {
@@ -56,7 +70,7 @@ function dryRun() {
 }
 
 /**
- * SEND EMAILS — respects TEST_MODE flag.
+ * SEND EMAILS - respects TEST_MODE flag.
  * Set TEST_MODE = true to send one email to yourself first.
  * Set TEST_MODE = false to send to all students.
  */
@@ -112,7 +126,7 @@ function sendRubrics() {
 }
 
 /**
- * VERIFICATION — creates a Google Sheet listing every email-rubric pairing.
+ * VERIFICATION - creates a Google Sheet listing every email-rubric pairing.
  * Run this before sending to confirm the mapping is correct.
  * Check that:
  *   1. Every student number maps to the right email
@@ -123,7 +137,7 @@ function createVerificationSheet() {
   const folder = DriveApp.getFolderById(FOLDER_ID);
   const files = folder.getFiles();
 
-  const ss = SpreadsheetApp.create("MKM411_ST2_Email_Verification");
+  const ss = SpreadsheetApp.create(VERIFICATION_SHEET_NAME);
   const sheet = ss.getActiveSheet();
   sheet.appendRow(["Username", "Email", "Filename", "File Size (KB)"]);
   sheet.getRange("A:A").setNumberFormat("@");
@@ -143,3 +157,33 @@ function createVerificationSheet() {
 
   Logger.log("Verification sheet created: " + ss.getUrl());
 }
+
+// =============================================================================
+// PRESET - MKM411 Semester Test (paste into the CONFIG block above to reuse)
+// -----------------------------------------------------------------------------
+// const SENDER_NAME = "Prof Muaaz Bhamjee";
+// const VERIFICATION_SHEET_NAME = "MKM411_ST2_Email_Verification";
+// const EMAIL_SUBJECT = "MKM411 Semester Test 2 - Marking Rubric";
+// const EMAIL_BODY =
+//   "Dear Student,\n\n" +
+//   "Please find attached your marking rubric for MKM411 Semester Test 2.\n\n" +
+//   "If you have any queries regarding your marks, please contact me during consultation hours.\n\n" +
+//   "Please take note of the below critical information regarding the marking rubric versus the mark " +
+//   "and GA5 Competency Assessment on ClickUP:\n" +
+//   "1. The marks were adjusted up by 8%. The rubric reflects the mark pre-adjustment. The mark on " +
+//   "ClickUP reflects the adjusted mark.\n" +
+//   "2. In terms of assessing GA5 Competency, the rubric provides the original assessment criteria. " +
+//   "If you met those criteria, which is 4 or greater, then you have passed the GA5 component.\n" +
+//   "3. We removed the GA5-4 and GA5-7 criteria from the rubric. Thus, the revised criteria require " +
+//   "you to obtain 3 or greater to pass the GA5 component.\n" +
+//   "4. The rubric reflects the original GA5 assessment criteria. The ST2 GA5 column in ClickUP " +
+//   "reflects the adjusted criteria.\n" +
+//   "5. On ClickUP, the GA5 Competency Assessment is listed as 'ST2 GA5' and is separate from the mark.\n" +
+//   "6. For the ST2 GA5 column, 1/1 means Competent (passed GA5 on the adjusted criteria) and 0/1 " +
+//   "means Not Yet Competent.\n\n" +
+//   "Please review your rubric and the information above carefully.\n\n" +
+//   "Kind regards,\n" +
+//   "Prof Muaaz Bhamjee\n" +
+//   "Department of Mechanical and Aeronautical Engineering\n" +
+//   "University of Pretoria";
+// =============================================================================
