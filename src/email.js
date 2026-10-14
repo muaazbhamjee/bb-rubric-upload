@@ -15,22 +15,33 @@ const STUDENT_EMAIL_DOMAIN = "tuks.co.za";
 const SENDER_NAME = "Prof Muaaz Bhamjee";
 const VERIFICATION_SHEET_NAME = "MIA320_GA7_Email_Verification";
 
-const EMAIL_SUBJECT = "MIA 320 GA7 Individual Project - Marking Rubric";
+const EMAIL_SUBJECT = "MIA 320 GA7 Individual Project: rubric, results and resubmission";
 const EMAIL_BODY =
   "Dear Student,\n\n" +
   "Please find attached your marking rubric for the GA7 individual project in MIA 320 " +
-  "(Impact of Engineering Activity and Groupwork).\n\n" +
-  "Please note the following about how the rubric relates to your result:\n" +
-  "1. Part A is the numeric mark out of 50. Part B is the GA7 competency decision, " +
-  "which is judged independently of the mark.\n" +
-  "2. To pass GA7 you must achieve at least 50% in Part A and be declared Competent in Part B.\n" +
-  "3. A report may score 50% or more and still be Not Yet Competent, or score below 50% and " +
-  "be Competent. The mark and the competency decision are therefore reported separately.\n" +
-  "4. On ClickUP, your overall mark and your GA7 competency outcome are recorded in separate columns.\n\n" +
-  "Please review your rubric carefully. If you have any queries regarding your marks, please " +
-  "contact me during consultation hours.\n\n" +
+  "(Impact of Engineering Activity and Groupwork). Please read this email in full, as it " +
+  "contains important information about your result and, where applicable, a compulsory resubmission.\n\n" +
+  "1. Your total mark for this assessment and your total GA7 component mark are available on ClickUP.\n\n" +
+  "2. Your final GA7 outcome, recorded as Competent or Not Yet Competent, is also on ClickUP. " +
+  "The attached rubric sets out the detailed assessment behind this outcome (Part A is the numeric " +
+  "mark out of 50, and Part B is the competency decision, which is judged independently of the mark).\n\n" +
+  "3. You will have one opportunity to go through your individual report with us, on Thursday, " +
+  "15 October 2026. Prof Bhamjee will be available from 09:00 to 12:00 in Engineering 3, Office 6-63, " +
+  "and Mr Mathebula from 13:00 to 16:00 in Engineering 3, Office 6-82. This is the only query period " +
+  "and the only mechanism for queries on this assessment.\n\n" +
+  "4. If your GA7 outcome is Not Yet Competent, you are required to resubmit for the remedial " +
+  "submission, which will be open in time for this. This is your final opportunity.\n\n" +
+  "5. If you must resubmit, study the reasons you were deemed Not Yet Competent on your rubric and " +
+  "revise your report accordingly. If you are uncertain about any of the reasons, you must contact us, " +
+  "for which the Thursday session above is the appropriate time.\n\n" +
+  "6. The deadline for resubmission is Monday, 21 October 2026 at 17:00. No late submissions will be " +
+  "accepted, and the standard 24-hour grace period does not apply to this submission.\n\n" +
+  "7. Please note carefully that failure to submit, for those required to do so, will result in " +
+  "failure of the module. Failing GA7 likewise results in failure of the module.\n\n" +
+  "Please attend to this without delay.\n\n" +
   "Kind regards,\n" +
-  "Prof Muaaz Bhamjee\n" +
+  "Prof Muaaz Bhamjee and Mr Ipeleng Mathebula\n" +
+  "MIA 320 lecturers\n" +
   "Department of Mechanical and Aeronautical Engineering\n" +
   "University of Pretoria";
 

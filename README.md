@@ -22,8 +22,8 @@ pip install pymupdf pypdf openpyxl
 | Package   | Used by |
 |-----------|---------|
 | `pymupdf` | `flatten_pdfs.py` (preferred flatten backend) |
-| `pypdf`   | `prepare_student_rubrics.py`, `sort_rubrics.py`, `ga7_rubric_report.py`, flatten fallback |
-| `openpyxl`| `ga7_rubric_report.py`, `package_for_upload.py` |
+| `pypdf`   | `prepare_student_rubrics.py`, `sort_rubrics.py`, `ga7_rubric_report.py`, `check_competency_anomalies.py`, flatten fallback |
+| `openpyxl`| `ga7_rubric_report.py`, `check_competency_anomalies.py`, `package_for_upload.py` |
 
 ### Optional system package - pdftk
 
@@ -43,6 +43,7 @@ using your UP Google Workspace account (Drive + Gmail).
 |---|---|---|---|
 | `ga7_rubric_report.py` | GA7 report: completion, per-TA grading spread (box plots), calibration, moderation sample | MIA 320 | Python |
 | `sort_rubrics.py` | Classify rubrics (fully/partially/ungraded) and sort into folders; handle duplicates | MIA 320 | Python |
+| `check_competency_anomalies.py` | Flag competency-decision anomalies (core ticks vs outcome vs mark); Excel report + copies flagged rubrics | MIA 320 | Python |
 | `prepare_student_rubrics.py` | Combine graded rubrics, one per student, as `feedback_u<sn>.pdf` | MIA 320 | Python |
 | `rename_for_blackboard.py` | Rename test rubrics to `feedback_u<sn>.pdf` from the filename | MKM411 | Python |
 | `flatten_pdfs.py` | Flatten fillable PDFs to static, non-editable content (parallel) | shared | Python |
@@ -81,6 +82,17 @@ python ga7_rubric_report.py --input "/path/to/Graded"
 Produces `GA7_report.xlsx`: Completion, Overall Stats (box-and-whisker spread per TA, variation,
 competency, distribution), All Students, per-TA tabs, Calibration, Moderation Sample, Empty
 Fields, Anomalies. Also copies the external-moderation sample into `Moderation_Sample/`.
+
+### 2a. (Optional) Check competency-decision anomalies
+
+Cross-check the Part B core indicators (C1-C4 ticks) against the overall outcome and the
+Part A mark (pass = 25/50).
+
+```bash
+python check_competency_anomalies.py "/path/to/Graded"
+```
+
+Flags: **A** - 2 or fewer core ticks but declared Competent (contradicts the >= 3 rule); **B** - 3 or more ticks and >= 50% but declared Not Yet Competent (should be Competent); **C** - 3 or more ticks, Competent, but < 50% (review only, since the rubric allows Competent below 50%). Writes `competency_anomalies.xlsx` (Summary + Anomalies sheets) and copies each flagged rubric into `Anomalies/<FLAG>__<file>.pdf`. Rubrics with an undecided outcome or a missing mark are listed as Incomplete rather than skipped.
 
 ### 3. Combine rubrics for students
 
